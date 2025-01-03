@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+    <head>
+        <title>Box Resize Tool</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <main>
+            <h2>Box Resize Tool</h2>
+            <form id="boxForm">
+                <label for="length">length:</label>
+                <input type="number" id="length" name="length" min="1"><br/>
+
+                <label for="width">width:</label>
+                <input type="number" id="width" name="width" min="1"><br/>
+
+                <label for="height">height:</label>
+                <input type="number" id="height" name="height" min="1"><br/>
+
+                <input id="btn" type="submit" value="Get Box">
+            </form>
+            <div id="output">
+
+            </div>
+        </main>  
+    </body>
+        <script type="text/javascript" src="box.js"></script>        
+</html>

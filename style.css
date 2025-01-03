@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:wght@100..900&display=swap');
+
+body
+{
+    background-color: #E5E5E5;
+    margin: 0;
+}
+
+main
+{
+    max-width: 1024px;
+    margin: 32px auto;
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column; 
+    height: calc(100vh - 64px);
+    
+    background-color: #F2F2F2;
+    font-family: "Noto Sans Mono", monospace;
+}
+
+form
+{
+    margin: 0;
+    padding: 0;
+
+    display: grid;
+    grid-template-columns: min-content,auto
+
+}
+
+form label
+{
+    width: min-content;
+    margin: 0;
+    padding: 0.25em;
+    grid-column: 1 / span 1;
+    text-align: right;
+}
+
+form input
+{
+    width: auto;
+    margin: 0;
+    padding: 0.25em;
+
+    grid-column: 2 / span 1;
+}
+
+/* body
+{
+  background-color: #E5E5E5;
+  margin: 0;
+}
+
+form
+{
+  max-width: 1024px;
+  margin: 32px auto;
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column; 
+  height: calc(100vh - 64px);
+  
+  background-color: #F2F2F2;
+}
+
+textarea
+{
+  box-sizing: border-box;
+  height: 100%;
+  width: 100%;
+  padding: 0.5em;
+  font-family: "Noto Sans Mono", monospace;
+  font: 16px;
+  color: #1A1A1A;
+  border-color: #1A1A1A;
+  margin: 0;
+  resize: none;
+}
+
+@media print{
+  body{
+    visibility: hidden
+  }
+  textarea{
+    visibility: visible;
+    border: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    background-color: white;
+    color: black;
+  }
+} */
