@@ -23,28 +23,67 @@ form
 {
     margin: 0;
     padding: 0;
-
     display: grid;
-    grid-template-columns: min-content,auto
-
+    grid-template-columns: max-content;
 }
 
 form label
 {
     width: min-content;
-    margin: 0;
+    margin: 0.2em 0;
     padding: 0.25em;
     grid-column: 1 / span 1;
     text-align: right;
 }
 
-form input
+form input.text, form .buttons
 {
     width: auto;
-    margin: 0;
+    margin: 0.2em 0;
     padding: 0.25em;
 
     grid-column: 2 / span 1;
+}
+
+form .buttons input
+{
+  padding: 0.5em;
+  width: min-content;
+}
+
+#output
+{
+  width: max-content;
+  min-width: 15em;
+}
+
+#output *
+{
+  margin: 0;
+  padding: 0;
+}
+
+#output .box-choice
+{
+  border: 1px solid black;
+  border-radius: 10px;
+  padding: 0.5em;
+  margin: 1em;
+}
+
+#output .box-choice h3
+{
+  float: left;
+}
+
+#output .box-choice .score
+{
+  float: right;
+}
+
+#output .box-choice .details
+{
+  clear: both;
 }
 
 /* body

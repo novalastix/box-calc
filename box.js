@@ -31,122 +31,76 @@
 ];
 
 const boxForm = document.getElementById("boxForm");
+const resetButton = document.getElementById("resetButton");
+const output = document.getElementById("output"); 
+const inputlength = document.getElementById("length");
+const inputwidth = document.getElementById("width");
+const inputheight = document.getElementById("height");
+
+const choices = 2;
+const alwaysNoResize = true;
+
+var maxScore = 0;
 
 boxForm.addEventListener("submit", (e) => {
     e.preventDefault();
 
-    const output = document.getElementById("output"); 
-    const inputlength = Number(document.getElementById("length").value);
-    const inputwidth = Number(document.getElementById("width").value);
-    const inputheight = Number(document.getElementById("height").value);
-    
-    let dimArray = [inputlength,inputwidth,inputheight];
+    let dimArray = [Number(inputlength.value),Number(inputwidth.value),Number(inputheight.value)];
     dimArray.sort(function(a, b) {return a - b;});
 
     const height = dimArray[0];
     const width = dimArray[1];
     const length = dimArray[2];
 
-    let text = document.createTextNode(getBox(length,width,height));
+    let boxes = getBoxes(length,width,height);
 
     output.innerHTML = "";
-    output.appendChild(text);
+    let nonResized = false;
+    let i = 0
+    for(i = 0;i<choices;i++)
+    {
+        if(boxes[i].score < 999) output.appendChild(generateOutput(boxes[i]));
+        
+        if(!boxes[i].resize) nonResized=true;
+    }
+
+    while(!nonResized || i > boxes.length)
+    {
+        if(!boxes[i].resize){
+            output.appendChild(generateOutput(boxes[i]));
+            nonResized=true;
+        }
+        i++
+    }
 });
 
-function getBox(length,width,height){
+resetButton.addEventListener("click", (e) => { clear(); });
+
+function clear()
+{
+    output.innerHTML="";
+    inputlength.value = "";
+    inputwidth.value = "";
+    inputheight.value = "";
+}
+
+function getBoxes(length,width,height)
+{
     const girth = length + width;
 
-    // let score = 999;
-    // let bestBox = null;
-
-    let boxScores = []
+    let boxes = [];
     for(let i = 0; i < boxlist.length; i++)
     {
         let box = boxlist[i];
-        // let boxLength = box[0];
-        // let boxWidth = box[1];
-        // let boxHeight = box[2];
-        // let boxGirth = boxLength + boxWidth;
-
-        // console.log(score);
-        // console.log(bestBox);
-
-        // console.log(boxHeight)
-        // if (boxHeight >= height)
-        // {
-        //     console.log(boxGirth)
-        //     if(boxGirth >= girth)
-        //     {
-        //         let boxScore = boxGirth - girth;
-
-        //         console.log("box score: " + boxScore);
-
-        //         if(score > boxScore)
-        //         {
-        //             score = boxScore;
-        //             bestBox = i;
-        //         }
-        //     }
-        // }
 
         let boxScore = getScore(length,width,height,box);
-        console.log(boxScore.box)
-        console.log(boxScore.score)
-
-        boxScores.push(boxScore);
-
-        // if(score > boxScore.score)
-        // {
-        //     score = boxScore.score;
-        //     bestBox = boxScore;
-        // }
+        boxes.push(boxScore);
     }
 
-    boxScores.sort(function(a, b) {return a.score - b.score;});
+    boxes.sort(function(a, b) {return a.score - b.score;});
 
-    let output = "";
-    for(let i = 0;i<3;i++)
-    {
-        if(boxScores[i].score < 999) output+="["+ boxScores[i].box +"] resized to ["+ boxScores[i].newSize +"] (SCORE: "+ boxScores[i].score +") <br/>"
-    }
-
-   return output
-
-    // if (bestBox.resize) return "box: ["+ bestBox.box +"] resized to ["+bestBox.newSize+"] (SCORE: "+ bestBox.score+")";
-    // else return "box: ["+ bestBox.box +"] (SCORE: "+ bestBox.score+")";
+    return boxes;
 }
-
-// getScore(length,width,height,box)
-// {
-//     let boxLength = box[0];
-//     let boxWidth = box[1];
-//     let boxHeight = box[2];
-//     let boxGirth = boxLength + boxWidth;
-//     let girth = length+width;
-
-//     if(height > boxHeight) return 999;
-
-//     if (girth > boxGirth) return 999;
-
-//     if((boxGirth - girth)  )
-// }
-
-// function getResize(length,width,boxLength,boxWidth)
-// {
-//     let lengthDif = boxLength-length;
-//     let boxGirth = boxLength+boxWidth;
-
-//     for (let diff = 2; diff < (boxWidth-1); diff++)
-//     {
-//         let newWidth = boxWidth-diff;
-//         let newLength = boxLength+diff;
-
-//         if(newLength >= length && newWidth >= width)
-//         {
-//             return [newLength,newWidth];   
-//         }
-//     }
-// }
 
 function getScore(length,width,height,box)
 {
@@ -156,20 +110,35 @@ function getScore(length,width,height,box)
     const boxHeight = box[2];
     const boxGirth = boxLength + boxWidth;
     const noScore = {score:999,box: null, newSize: null, resize: false};
+    
+    maxScore = 0;
 
     if (boxHeight < height) return noScore;
 
     if (boxGirth < girth) return noScore;
 
+    let score = 999;
     if (boxLength >= length && boxWidth >= width)
     {
-        //no changes necessary
-        let score = calcScore(length,boxLength,width,boxWidth,height,boxHeight);//(boxLength-length) + (boxWidth-width)+ (boxHeight-height)  + (boxLength-boxWidth) + (boxLength-length);
-
-        return {score:score,box:box,newSize:box, resize: false};
+        
+        //no resize necessary
+        if(boxHeight == height)
+        {
+            //no cutting either
+            score = calcScore(length,boxLength,width,boxWidth,height,boxHeight);//(boxLength-length) + (boxWidth-width)+ (boxHeight-height)  + (boxLength-boxWidth) + (boxLength-length);
+            maxScore += score;
+            return {score:score,box:box,newSize:box, resize: false};
+        }
+        else
+        {
+            //cut down box to height
+            score = calcScore(length,boxLength,width,boxWidth,height,height);//(boxLength-length) + (boxWidth-width)+ (boxHeight-height)  + (boxLength-boxWidth) + (boxLength-length);
+            maxScore+=score;
+            return {score:score,box:box,newSize:[boxLength,boxWidth,height], resize: false};
+        }
+        
     }
 
-    let score = 999;
     let newSize = null;
     for(let i = 2; i < boxGirth; i++)
     {
@@ -180,11 +149,13 @@ function getScore(length,width,height,box)
         {
             if(newLength >= length && newWidth >= width) //box meets new criteria
             {
-                let tempScore = calcScore(length,newLength,width,newWidth,height,boxHeight);
+                let tempScore = calcScore(length,newLength,width,newWidth,height,height);
+                maxScore+=tempScore;
+
                 if (tempScore < score)
                 {
                  score = tempScore;
-                 newSize = [newLength,newWidth,boxHeight];   
+                 newSize = [newLength,newWidth,height];   
                 }
             }
         }
@@ -197,3 +168,52 @@ function calcScore(length,boxLength,width,boxWidth,height,boxHeight)
 {
     return ((boxLength-length) + (boxWidth-width) + (boxHeight-height));
 }
+
+function generateOutput(box)
+{
+    var boxChoice = document.createElement('div');
+    boxChoice.classList.add("box-choice");
+
+    var boxSize = document.createElement('h3');
+    var boxText = document.createTextNode(box.box);
+    boxSize.appendChild(boxText);
+    boxChoice.appendChild(boxSize);
+
+    var score = document.createElement('h3');
+    score.classList.add("score");
+    var scoreText = document.createTextNode(scorePercentile(box.score));
+    score.appendChild(scoreText);
+    boxChoice.appendChild(score);
+    
+    var details = document.createElement('div');
+    details.classList.add("details");
+
+    if(box.box[0] != box.newSize[0] || box.box[1] != box.newSize[1])
+    {
+        //Box resized
+        var resize = document.createElement('div');
+        var resizeText = document.createTextNode("Resize to " + box.newSize[0] +"x"+box.newSize[1]);
+        resize.appendChild(resizeText);
+        details.appendChild(resize);
+    }
+    if(box.box[2] != box.newSize[2])
+    {
+        //box cut down
+        var cut = document.createElement('div');
+        var cutText = document.createTextNode("Cut down to " + box.newSize[2]);
+        cut.appendChild(cutText);
+        details.appendChild(cut);
+    }
+    boxChoice.appendChild(details);
+    
+
+    return boxChoice;
+}
+
+function scorePercentile(score)
+{
+    if(maxScore==0) return "100%"
+    return Math.trunc(100 * (1 - (score / maxScore))) + "%"
+}
+
+clear();
