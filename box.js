@@ -134,7 +134,7 @@ function getScore(dim, box)
                     {
                         if(newLength >= dim[0] && newWidth >= dim[1]) //box meets new criteria
                         {
-                            let tempScore = (newLength - dim[0]) + (newWidth - dim[1]) + (newLength-newWidth);
+                            let tempScore = (newLength - dim[0]) + (newWidth - dim[1]);
             
                             if (tempScore < boxScore.score)
                             {
