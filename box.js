@@ -1,7 +1,8 @@
- //box = [L,W,H]
- const boxlist = [
+const boxList=
+[
     [6,6,6],
     [8,8,8],
+    [10,10,10],
     [12,12,12],
     [14,14,14],
     [16,16,16],
@@ -30,143 +31,118 @@
     [30,24,6]
 ];
 
-const boxForm = document.getElementById("boxForm");
-const resetButton = document.getElementById("resetButton");
-const output = document.getElementById("output"); 
-const inputlength = document.getElementById("length");
-const inputwidth = document.getElementById("width");
-const inputheight = document.getElementById("height");
+const page = 
+{
+    form: document.getElementById("boxForm"),
+    reset: document.getElementById("resetButton"),
+    output: document.getElementById("output"),
+    length: document.getElementById("length"),
+    width: document.getElementById("width"),
+    height: document.getElementById("height")
+}
 
-const choices = 2;
-const alwaysNoResize = true;
+const choices = 3;
+const maxScore = 54; //Should be equal to the largest girth
 
-var maxScore = 0;
-
-boxForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-
-    let dimArray = [Number(inputlength.value),Number(inputwidth.value),Number(inputheight.value)];
-    dimArray.sort(function(a, b) {return a - b;});
-
-    const height = dimArray[0];
-    const width = dimArray[1];
-    const length = dimArray[2];
-
-    let boxes = getBoxes(length,width,height);
-
-    output.innerHTML = "";
-    let nonResized = false;
-    let i = 0
-    for(i = 0;i<choices;i++)
-    {
-        if(boxes[i].score < 999) output.appendChild(generateOutput(boxes[i]));
-        
-        if(!boxes[i].resize) nonResized=true;
-    }
-
-    while(!nonResized || i > boxes.length)
-    {
-        if(!boxes[i].resize){
-            output.appendChild(generateOutput(boxes[i]));
-            nonResized=true;
-        }
-        i++
-    }
-});
-
-resetButton.addEventListener("click", (e) => { clear(); });
+function init()
+{
+    clear();
+}
 
 function clear()
 {
-    output.innerHTML="";
-    inputlength.value = "";
-    inputwidth.value = "";
-    inputheight.value = "";
+    page.output.innerHTML="";
+    page.length.value = "";
+    page.width.value = "";
+    page.height.value = "";
 }
 
-function getBoxes(length,width,height)
-{
-    const girth = length + width;
+page.form.addEventListener("submit", (e) => {
+    e.preventDefault();
 
-    let boxes = [];
-    for(let i = 0; i < boxlist.length; i++)
+    let dim = [Number(page.length.value),Number(page.width.value),Number(page.height.value)];
+    dim.sort(function(a,b){return b-a});
+
+    let boxScores = getScores(dim);
+
+    page.output.innerHTML="";
+
+    for(let i = 0; i < choices; i++)
     {
-        let box = boxlist[i];
-
-        let boxScore = getScore(length,width,height,box);
-        boxes.push(boxScore);
+        if(boxScores[i].score < 999)
+        {
+            page.output.appendChild(generateOutput(boxScores[i]));
+        }
     }
+});
 
-    boxes.sort(function(a, b) {return a.score - b.score;});
+function getScores(dim)
+{
+    let boxScores = [];
 
-    return boxes;
+    boxList.forEach(box => {
+
+        let boxScore = getScore(dim, box);
+
+        boxScores.push(boxScore);
+    })
+
+    boxScores.sort(function(a, b) {return a.score - b.score;});
+
+    return boxScores;
 }
 
-function getScore(length,width,height,box)
+function getScore(dim, box)
 {
-    const girth = length+width;
-    const boxLength = box[0];
-    const boxWidth = box[1];
-    const boxHeight = box[2];
-    const boxGirth = boxLength + boxWidth;
-    const noScore = {score:999,box: null, newSize: null, resize: false};
-    
-    maxScore = 0;
-
-    if (boxHeight < height) return noScore;
-
-    if (boxGirth < girth) return noScore;
-
-    let score = 999;
-    if (boxLength >= length && boxWidth >= width)
+    let boxScore = 
     {
-        
-        //no resize necessary
-        if(boxHeight == height)
-        {
-            //no cutting either
-            score = calcScore(length,boxLength,width,boxWidth,height,boxHeight);//(boxLength-length) + (boxWidth-width)+ (boxHeight-height)  + (boxLength-boxWidth) + (boxLength-length);
-            maxScore += score;
-            return {score:score,box:box,newSize:box, resize: false};
-        }
-        else
-        {
-            //cut down box to height
-            score = calcScore(length,boxLength,width,boxWidth,height,height);//(boxLength-length) + (boxWidth-width)+ (boxHeight-height)  + (boxLength-boxWidth) + (boxLength-length);
-            maxScore+=score;
-            return {score:score,box:box,newSize:[boxLength,boxWidth,height], resize: false};
-        }
-        
+        box: box,
+        resize: [],
+        score: 999
     }
 
-    let newSize = null;
-    for(let i = 2; i < boxGirth; i++)
+    if(box[2] >= dim[2]) //Box must be at least high enough
     {
-        let newLength = Math.max(i,boxGirth-i);
-        let newWidth = boxGirth - newLength;
-
-        if ((Math.abs(newLength - boxLength) >= 2) && (Math.abs(newWidth - boxWidth) >= 2)) //avoid changing a box by less than 2 inches
+        if((box[0]+box[1]) >= (dim[0]+dim[1])) //Box girth must be at least large enough
         {
-            if(newLength >= length && newWidth >= width) //box meets new criteria
+            if(box[0] >= dim[0] && box[1] >= dim[1])
             {
-                let tempScore = calcScore(length,newLength,width,newWidth,height,height);
-                maxScore+=tempScore;
+                //If box is already big enough for the item, get negative space score and return
 
-                if (tempScore < score)
+                boxScore.resize = [box[0],box[1],dim[2]];
+                
+
+                boxScore.score = (box[0] - dim[0]) + (box[1] - dim[1]) + (Math.min(box[2]-dim[2],1));
+            }
+            else
+            {
+                //Check if diagonal fit is possible
+                
+
+                //Check if resizing the box is better
+                for(let i = 2; i < (box[0]+box[1]); i++)
                 {
-                 score = tempScore;
-                 newSize = [newLength,newWidth,height];   
+                    let newLength = Math.max(i,(box[0]+box[1])-i);
+                    let newWidth = (box[0]+box[1]) - newLength;
+            
+                    if ((Math.abs(newLength - box[0]) >= 2) && (Math.abs(newWidth - box[1]) >= 2)) //avoid changing a box by less than 2 inches
+                    {
+                        if(newLength >= dim[0] && newWidth >= dim[1]) //box meets new criteria
+                        {
+                            let tempScore = (newLength - dim[0]) + (newWidth - dim[1]) + (newLength-newWidth);
+            
+                            if (tempScore < boxScore.score)
+                            {
+                                boxScore.score = tempScore;
+                                boxScore.resize = [newLength,newWidth,dim[2]];
+                            }
+                        }
+                    }
                 }
             }
         }
     }
-
-    return {score:score,box:box,newSize:newSize,resize:true};
-}
-
-function calcScore(length,boxLength,width,boxWidth,height,boxHeight)
-{
-    return ((boxLength-length) + (boxWidth-width) + (boxHeight-height));
+    return boxScore;
 }
 
 function generateOutput(box)
@@ -188,32 +164,48 @@ function generateOutput(box)
     var details = document.createElement('div');
     details.classList.add("details");
 
-    if(box.box[0] != box.newSize[0] || box.box[1] != box.newSize[1])
+    if(box.box[0] == box.resize[0] && box.box[1] == box.resize[1] && box.box[2] == box.resize[2])
     {
-        //Box resized
-        var resize = document.createElement('div');
-        var resizeText = document.createTextNode("Resize to " + box.newSize[0] +"x"+box.newSize[1]);
-        resize.appendChild(resizeText);
-        details.appendChild(resize);
+        var fit = document.createElement('div');
+        if(box.score == 0)
+        {
+            var fitText = document.createTextNode("Perfect fit!");
+        }
+        else
+        {
+            var fitText = document.createTextNode("No cutting necessary.");
+        }
+        fit.appendChild(fitText);
+        details.appendChild(fit);
     }
-    if(box.box[2] != box.newSize[2])
+    else
     {
-        //box cut down
-        var cut = document.createElement('div');
-        var cutText = document.createTextNode("Cut down to " + box.newSize[2]);
-        cut.appendChild(cutText);
-        details.appendChild(cut);
+        if(box.box[0] != box.resize[0] || box.box[1] != box.resize[1])
+        {
+            //Box resized
+            var resize = document.createElement('div');
+            var resizeText = document.createTextNode("Resize to " + box.resize[0] +"x"+box.resize[1]);
+            resize.appendChild(resizeText);
+            details.appendChild(resize);
+        }
+        if(box.box[2] != box.resize[2])
+        {
+            //box cut down
+            var cut = document.createElement('div');
+            var cutText = document.createTextNode("Cut down to " + box.resize[2]);
+            cut.appendChild(cutText);
+            details.appendChild(cut);
+        }
     }
+
     boxChoice.appendChild(details);
     
-
     return boxChoice;
 }
 
 function scorePercentile(score)
 {
-    if(maxScore==0) return "100%"
-    return Math.trunc(100 * (1 - (score / maxScore))) + "%"
+    return Math.floor((1 - (score / maxScore)) * 100) + "%";
 }
 
-clear();
+init();
