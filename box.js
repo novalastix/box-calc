@@ -45,7 +45,6 @@ const page =
     width: document.getElementById("width"),
     height: document.getElementById("height")
 }
-
 const choices = 3;
 const maxScore = 54; //Should be equal to the largest girth
 
@@ -74,7 +73,7 @@ page.form.addEventListener("submit", (e) => {
 
     for(let i = 0; i < choices; i++)
     {
-        if(boxScores[i].score < 999)
+        if(boxScores[i].score > 0)
         {
             page.output.appendChild(generateOutput(boxScores[i]));
         }
@@ -92,7 +91,7 @@ function getScores(dim)
         boxScores.push(boxScore);
     })
 
-    boxScores.sort(function(a, b) {return a.score - b.score;});
+    boxScores.sort(function(a, b) {return b.score - a.score;});
 
     return boxScores;
 }
@@ -103,7 +102,7 @@ function getScore(dim, box)
     {
         box: box,
         resize: [],
-        score: 999
+        score: 0
     }
 
     if(box[2] >= dim[2]) //Box must be at least high enough
@@ -112,12 +111,9 @@ function getScore(dim, box)
         {
             if(box[0] >= dim[0] && box[1] >= dim[1])
             {
-                //If box is already big enough for the item, get negative space score and return
-
                 boxScore.resize = [box[0],box[1],dim[2]];
                 
-
-                boxScore.score = (box[0] - dim[0]) + (box[1] - dim[1]) + (Math.min(box[2]-dim[2],1));
+                boxScore.score = calculateScore(box,boxScore.resize,dim)//(box[0] - dim[0]) + (box[1] - dim[1]) + (Math.min(box[2]-dim[2],1));
             }
             else
             {
@@ -134,12 +130,13 @@ function getScore(dim, box)
                     {
                         if(newLength >= dim[0] && newWidth >= dim[1]) //box meets new criteria
                         {
-                            let tempScore = (newLength - dim[0]) + (newWidth - dim[1]);
+                            let tempResize = [newLength,newWidth,dim[2]]
+                            let tempScore = calculateScore(box,tempResize,dim)//(newLength - dim[0]) + (newWidth - dim[1]);
             
-                            if (tempScore < boxScore.score)
+                            if (tempScore > boxScore.score)
                             {
                                 boxScore.score = tempScore;
-                                boxScore.resize = [newLength,newWidth,dim[2]];
+                                boxScore.resize = tempResize;
                             }
                         }
                     }
@@ -148,6 +145,22 @@ function getScore(dim, box)
         }
     }
     return boxScore;
+}
+
+function calculateScore(box,resize,dim)
+{
+    const boxVolume = resize[0] * resize[1] * resize[2];
+    const dimVolume = dim[0] * dim[1] * dim[2];
+    const space = boxVolume-dimVolume;
+    const maxSpace = 30*24*12;
+    
+    const volumeScore = (1 - (space / maxSpace)) * 100;
+    return volumeScore;
+}
+
+function formatScore(score)
+{
+    return (Math.floor(score * 100) / 100) + "%";
 }
 
 function generateOutput(box)
@@ -162,7 +175,7 @@ function generateOutput(box)
 
     var score = document.createElement('h3');
     score.classList.add("score");
-    var scoreText = document.createTextNode(scorePercentile(box.score));
+    var scoreText = document.createTextNode(formatScore(box.score));
     score.appendChild(scoreText);
     boxChoice.appendChild(score);
     
@@ -206,11 +219,6 @@ function generateOutput(box)
     boxChoice.appendChild(details);
     
     return boxChoice;
-}
-
-function scorePercentile(score)
-{
-    return Math.floor((1 - (score / maxScore)) * 100) + "%";
 }
 
 init();
